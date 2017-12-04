@@ -5,8 +5,14 @@ import sqlite3
 import sys
 from instagram.client import InstagramAPI
 
-token = 'EAACIVYZCGWFwBAFyUkERkkpBZCI4NYZCH1OvtiPnLORypw3iNaf2nfTfj1qryO6v9ZCwa3oXzVBHlN3nwUqTeXsHSt0mZCXHqZCyDAwVWSxOxnudtbDyXl3Tfxs4uPwuBIZABoR4kH5XorOIdfMd8ZAA45H2DlbnMzSWhyvwPZAZAFIdda9S06QA8lNn0iOCjcOnMZD'
+token = 'EAACEdEose0cBAM0eWOwSkzwvTpeA7dBezV9si4oWTokvLYBkJQllt8uZAzXsG5fO9TKD6fwmSY1TNJZA6Slovt99dCWGvYBDcfZCJdPcaoUKjYRm74i1QqUuZBZChxt7pajZAZBiT2ExyDO1WI1JfZCsvP40JufE2ExlJz5ywcQaNp7vdK4yDruewraMhL3GIa0ZD'
 graph = facebook.GraphAPI(access_token = token, version = 2.11)
+#app_id = '149901065738332'
+#app_secret = '662d87f8853356f1826e02c1a0ae7e70'
+#extended_token = graph.extend_access_token(app_id, app_secret)
+#print (extended_token)
+profile = graph.get_object('me', fields = 'name,location')
+print(json.dumps(profile, indent = 4))
 
 CACHE_FNAME = "206_project4_fb_cache.json"
 
@@ -18,12 +24,15 @@ try:
 except:
     CACHE_DICTION = {}
 
+friends = graph.get_connections(id='me', connection_name='friends')
+print(json.dumps(friends, indent = 4))
+
 
 # I got the following code from this link: https://github.com/facebookarchive/python-instagram/blob/master/get_access_token.py
 # It is how I got the access code in order to use the Instagram API, and I was lead to that github file from the following 
 # link: http://www.pygopar.com/playing-with-instagrams-api/
 
-client_id = '3b55954ddb6c41719e92bd2a8466fe50'
+'''client_id = '3b55954ddb6c41719e92bd2a8466fe50'
 client_secret = 'd6af984c736f425996c91c3b96de266d'
 redirect_uri = 'http://www.google.com'
 scope = ['basic', 'comments', 'follower_list', 'likes', 'public_content']
@@ -32,7 +41,7 @@ insta_api = InstagramAPI(client_id=client_id, client_secret=client_secret, redir
 redirect_uri = insta_api.get_authorize_login_url(scope = scope)
 
 code = 'dbe77ddeec1a495199660a90559a449d'
-access_token = insta_api.exchange_code_for_access_token(code)
+access_token = insta_api.exchange_code_for_access_token(code)'''
 
 '''if len(sys.argv) > 1 and sys.argv[1] == 'local':
     try:
@@ -73,7 +82,7 @@ print ("Visit this page and authorize access in your browser: "+ redirect_uri)
 code = (str(input("Paste in code in query string after redirect: ").strip()))
 
 access_token = api.exchange_code_for_access_token(code)'''
-print ("access token: " )
-print (access_token)
+#print ("access token: " )
+#print (access_token)
 
 # This is the end of the code that I got online from the github file
