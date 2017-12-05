@@ -5,7 +5,7 @@ import sqlite3
 import sys
 from instagram.client import InstagramAPI
 
-token = 'EAACEdEose0cBAM0eWOwSkzwvTpeA7dBezV9si4oWTokvLYBkJQllt8uZAzXsG5fO9TKD6fwmSY1TNJZA6Slovt99dCWGvYBDcfZCJdPcaoUKjYRm74i1QqUuZBZChxt7pajZAZBiT2ExyDO1WI1JfZCsvP40JufE2ExlJz5ywcQaNp7vdK4yDruewraMhL3GIa0ZD'
+token = 'EAACIVYZCGWFwBAFe968IMYz8H6ycjYi6lKhOBnmnlYrrNGtj4zti9z2BJZCJb8IS7O9hVMfenUOQoeQf64xoP5mKqiwXT6BVLyo5ULsqQsd2M7ZCVCWKAivaMhLjAV8THAHScYjlN4jQa35NUAOMqOcMrBf8poptdZB0re0BZCwZDZD'
 graph = facebook.GraphAPI(access_token = token, version = 2.11)
 #app_id = '149901065738332'
 #app_secret = '662d87f8853356f1826e02c1a0ae7e70'
