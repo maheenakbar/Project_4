@@ -5,14 +5,15 @@ import sqlite3
 import sys
 from instagram.client import InstagramAPI
 
-token = 'EAACIVYZCGWFwBAFe968IMYz8H6ycjYi6lKhOBnmnlYrrNGtj4zti9z2BJZCJb8IS7O9hVMfenUOQoeQf64xoP5mKqiwXT6BVLyo5ULsqQsd2M7ZCVCWKAivaMhLjAV8THAHScYjlN4jQa35NUAOMqOcMrBf8poptdZB0re0BZCwZDZD'
+token = 'EAACEdEose0cBAKyCZBmtmT5QOwh6UniIR7jzF3OXhCiEK9rKT0DztAVWU2yrGYFUyUvaYQHcbwRmzGp7wQhuG2lPZAIeAVqxdFvocZBqtzQgPnURmWIlsj1y0HayR9tqzAZCIfzDCPFIldu57OCVWZBa9QNeW8goHIF48RXcPTLw7ZCgv93KNmtE583e9H5IIZD'
 graph = facebook.GraphAPI(access_token = token, version = 2.11)
+#graph.extend_access_token('149901065738332', '662d87f8853356f1826e02c1a0ae7e70')
 #app_id = '149901065738332'
 #app_secret = '662d87f8853356f1826e02c1a0ae7e70'
 #extended_token = graph.extend_access_token(app_id, app_secret)
 #print (extended_token)
 profile = graph.get_object('me', fields = 'name,location')
-print(json.dumps(profile, indent = 4))
+#print(json.dumps(profile, indent = 4))
 
 CACHE_FNAME = "206_project4_fb_cache.json"
 
@@ -25,7 +26,28 @@ except:
     CACHE_DICTION = {}
 
 friends = graph.get_connections(id='me', connection_name='friends')
-print(json.dumps(friends, indent = 4))
+friends2 = graph.get_all_connections(id='me', connection_name='friends')
+
+
+
+def get_events(key_word):
+
+    if key_word in CACHE_DICTION:
+        results = CACHE_DICTION[key_word]
+    else:
+
+        #gets last 100 instances of FB events with the given key word
+        results = graph.search(q = key_word, type = 'event', limit = 5)
+        CACHE_DICTION[key_word] = results
+        f = open(CACHE_FNAME, "w")
+        #updates the json file with whatever is in CACHE_DICTION
+        f.write(json.dumps(CACHE_DICTION))
+        f.close
+
+    return results
+
+get_events('poetry')
+get_events('party')
 
 
 # I got the following code from this link: https://github.com/facebookarchive/python-instagram/blob/master/get_access_token.py
