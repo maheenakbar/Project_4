@@ -5,14 +5,15 @@ import sqlite3
 import sys
 from instagram.client import InstagramAPI
 
-token = 'EAACEdEose0cBAKyCZBmtmT5QOwh6UniIR7jzF3OXhCiEK9rKT0DztAVWU2yrGYFUyUvaYQHcbwRmzGp7wQhuG2lPZAIeAVqxdFvocZBqtzQgPnURmWIlsj1y0HayR9tqzAZCIfzDCPFIldu57OCVWZBa9QNeW8goHIF48RXcPTLw7ZCgv93KNmtE583e9H5IIZD'
+token = 'EAAOJEiXVpEMBAJJsR44JOWyJH6LRJZAiYqnZA7TqZAXKBZBHQZAvVqb8xYEFBS5QpWc9tzeY0oeseZBSxJYH5DSsD8II2pfZCdMUM0YXUbUp0m46DbyYZCA08Siibvf9TRpYGpUsaZBl8SyfaV6hQMq9Qdvpui6F8CBcZD'
+
 graph = facebook.GraphAPI(access_token = token, version = 2.11)
 #graph.extend_access_token('149901065738332', '662d87f8853356f1826e02c1a0ae7e70')
 #app_id = '149901065738332'
 #app_secret = '662d87f8853356f1826e02c1a0ae7e70'
 #extended_token = graph.extend_access_token(app_id, app_secret)
 #print (extended_token)
-profile = graph.get_object('me', fields = 'name,location')
+#profile = graph.get_object('me', fields = 'name,location')
 #print(json.dumps(profile, indent = 4))
 
 CACHE_FNAME = "206_project4_fb_cache.json"
@@ -25,86 +26,136 @@ try:
 except:
     CACHE_DICTION = {}
 
-friends = graph.get_connections(id='me', connection_name='friends')
-friends2 = graph.get_all_connections(id='me', connection_name='friends')
-
-
+month_dict = {'01': 'January', '02': 'February', '03': 'March', '04': 'April', '05': 'May', '06': 'June', '07': 'July', '08': 'August', '09': 'September',
+              '10': 'October', '11': 'November', '12': 'December'}
 
 def get_events(key_word):
 
-    if key_word in CACHE_DICTION:
-        results = CACHE_DICTION[key_word]
+    word = 'events: ' + key_word
+
+    if word in CACHE_DICTION:
+        results = CACHE_DICTION[word]
     else:
 
         #gets last 100 instances of FB events with the given key word
-        results = graph.search(q = key_word, type = 'event', limit = 5)
-        CACHE_DICTION[key_word] = results
+        results = graph.search(q = key_word, type = 'event', limit = 100)
+        CACHE_DICTION[word] = results
         f = open(CACHE_FNAME, "w")
         #updates the json file with whatever is in CACHE_DICTION
         f.write(json.dumps(CACHE_DICTION))
         f.close
 
-    return results
+    return results['data']
 
-get_events('poetry')
-get_events('party')
+def get_connections(key_word):
+
+    word = 'connections: ' + key_word
+
+    if word in CACHE_DICTION:
+        results = CACHE_DICTION[word]
+    else:
+        results = graph.get_connections(id = 'me', connection_name = key_word)
+        CACHE_DICTION[word] = results
+        f = open(CACHE_FNAME, "w")
+        f.write(json.dumps(CACHE_DICTION))
+        f.close
+
+    return results['data']
+
+party_data = get_events('party')
+celebration_data = get_events('celebartion')
+blowout_data = get_events('blowout')
+festivity_data = get_events('festivity')
+shindig_data = get_events('shindig')
+my_posts = get_connections('posts')
+
+party_months = {}
+celebration_months = {}
+blowout_months = {}
+festivity_months = {}
+shindig_months = {}
+
+conn = sqlite3.connect('206_project4.sqlite')
+cur = conn.cursor()
+
+# This part of the code creates the tables for each word related to
+# 'party'
+cur.execute('DROP TABLE IF EXISTS Party')
+cur.execute('CREATE TABLE Party (name TEXT, date_time DATETIME, state TEXT, country TEXT, description TEXT)')
+
+cur.execute('DROP TABLE IF EXISTS Celebration')
+cur.execute('CREATE TABLE Celebration (name TEXT, date_time DATETIME, state TEXT, country TEXT, description TEXT)')
+
+cur.execute('DROP TABLE IF EXISTS Blowout')
+cur.execute('CREATE TABLE Blowout (name TEXT, date_time DATETIME, state TEXT, country TEXT, description TEXT)')
+
+cur.execute('DROP TABLE IF EXISTS Festivity')
+cur.execute('CREATE TABLE Festivity (name TEXT, date_time DATETIME, state TEXT, country TEXT, description TEXT)')
+
+cur.execute('DROP TABLE IF EXISTS Shindig')
+cur.execute('CREATE TABLE Shindig (name TEXT, date_time DATETIME, state TEXT, country TEXT, description TEXT)')
 
 
-# I got the following code from this link: https://github.com/facebookarchive/python-instagram/blob/master/get_access_token.py
-# It is how I got the access code in order to use the Instagram API, and I was lead to that github file from the following 
-# link: http://www.pygopar.com/playing-with-instagrams-api/
+def add_data(event_item, dict_input):
+    insert_list = [event_item['name'], event_item['start_time']]
 
-'''client_id = '3b55954ddb6c41719e92bd2a8466fe50'
-client_secret = 'd6af984c736f425996c91c3b96de266d'
-redirect_uri = 'http://www.google.com'
-scope = ['basic', 'comments', 'follower_list', 'likes', 'public_content']
+    date = event_item['start_time'].split('-')
+    month = date[1]
 
-insta_api = InstagramAPI(client_id=client_id, client_secret=client_secret, redirect_uri=redirect_uri)
-redirect_uri = insta_api.get_authorize_login_url(scope = scope)
+    if month_dict[month] in dict_input:
+        dict_input[month_dict[month]] += 1
+    else:
+        dict_input[month_dict[month]] = 1
 
-code = 'dbe77ddeec1a495199660a90559a449d'
-access_token = insta_api.exchange_code_for_access_token(code)'''
+    if 'place' in event_item:
+        if 'location' in event_item['place']:
+            if 'state' in event_item['place']['location']:
+                state = event_item['place']['location']['state']
+            else:
+                state = 'N/A'
+            if 'country' in event_item['place']['location']:
+                country = event_item['place']['location']['country']
+            else:
+                country = 'N/A'
+        else:
+            state = 'N/A'
+            country = 'N/A'
+    else:
+        state = 'N/A'
+        country = 'N/A'
+    if 'description' in event_item:
+        description = event_item['description']
+    else:
+        description = 'N/A'
 
-'''if len(sys.argv) > 1 and sys.argv[1] == 'local':
-    try:
-        from test_settings import *
+    insert_list.append(state)
+    insert_list.append(country)
+    insert_list.append(description)
 
-        InstagramAPI.host = test_host
-        InstagramAPI.base_path = test_base_path
-        InstagramAPI.access_token_field = "access_token"
-        InstagramAPI.authorize_url = test_authorize_url
-        InstagramAPI.access_token_url = test_access_token_url
-        InstagramAPI.protocol = test_protocol
-    except Exception:
-        pass
+    return insert_list
 
-# Fix Python 2.x.
-try:
-    import __builtin__
-    input = getattr(__builtin__, 'raw_input')
-except (ImportError, AttributeError):
-    pass
+def add_data_to_tables():
+    for event in party_data:
+        insert = add_data(event, party_months)
+        cur.execute('INSERT INTO Party (name, date_time, state, country, description) VALUES (?, ?, ?, ?, ?)', insert)
+        conn.commit()
 
+    for event in celebration_data:
+        insert = add_data(event, celebration_months)
+        cur.execute('INSERT INTO Celebration (name, date_time, state, country, description) VALUES (?, ?, ?, ?, ?)', insert)
+        conn.commit()
 
+    for event in blowout_data:
+        insert = add_data(event, blowout_months)
+        cur.execute('INSERT INTO Blowout (name, date_time, state, country, description) VALUES (?, ?, ?, ?, ?)', insert)
+        conn.commit()
 
-client_id = input("Client ID: ").strip()
-client_secret = input("Client Secret: ").strip()
-redirect_uri = input("Redirect URI: ").strip()
-raw_scope = input("Requested scope (separated by spaces, blank for just basic read): ").strip()
-scope = raw_scope.split(' ')
-# For basic, API seems to need to be set explicitly
-if not scope or scope == [""]:
-    scope = ["basic"]
+    for event in festivity_data:
+        insert = add_data(event, festivity_months)
+        cur.execute('INSERT INTO Festivity (name, date_time, state, country, description) VALUES (?, ?, ?, ?, ?)', insert)
+        conn.commit()
 
-api = InstagramAPI(client_id=client_id, client_secret=client_secret, redirect_uri=redirect_uri)
-redirect_uri = api.get_authorize_login_url(scope = scope)
-
-print ("Visit this page and authorize access in your browser: "+ redirect_uri)
-
-code = (str(input("Paste in code in query string after redirect: ").strip()))
-
-access_token = api.exchange_code_for_access_token(code)'''
-#print ("access token: " )
-#print (access_token)
-
-# This is the end of the code that I got online from the github file
+    for event in shindig_data:
+        insert = add_data(event, shindig_months)
+        cur.execute('INSERT INTO Shindig (name, date_time, state, country, description) VALUES (?, ?, ?, ?, ?)', insert)
+        conn.commit()
